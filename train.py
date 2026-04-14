@@ -105,7 +105,7 @@ def train(smoke: bool = False) -> None:
         args=args,
         train_dataset=splits["train"],
         eval_dataset=splits["validation"],
-        tokenizer=tokenizer,
+        processing_class=tokenizer,
         data_collator=collator,
     )
 
