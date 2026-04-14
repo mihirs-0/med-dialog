@@ -16,9 +16,19 @@ CLARIFY_PROMPT = (
     "information, ask a clarifying question before giving advice.\n\n"
 )
 
+# V2: preserves the exact training prefix ("Respond as a doctor to the
+# following patient conversation") and only appends the clarify instruction.
+# Isolates the variable when V1 produced OOD gibberish due to prompt drift.
+CLARIFY_PROMPT_V2 = (
+    "Respond as a doctor to the following patient conversation. "
+    "If the description is missing critical information, ask a clarifying "
+    "question before giving advice:\n\n"
+)
+
 PROMPT_PRESETS = {
     "default": TASK_PREFIX,
     "clarify": CLARIFY_PROMPT,
+    "clarify_v2": CLARIFY_PROMPT_V2,
 }
 
 MAX_INPUT_LENGTH = 512

@@ -1,0 +1,21 @@
+2026-04-14 16:06:49,724 INFO Loading model from mihir-s/flan-t5-meddialog-finetuned (device=cpu)
+2026-04-14 16:06:49,724 INFO Prompt: 'Respond as a doctor to the following patient conversation. If the description is missing critical information, ask a clarifying question before giving advice:\n\n'
+2026-04-14 16:06:50,030 WARNING Tokenizer load from mihir-s/flan-t5-meddialog-finetuned failed ('list' object has no attribute 'keys'). Falling back to base tokenizer google/flan-t5-base — safe because fine-tuning did not modify the vocabulary.
+2026-04-14 16:06:51,268 INFO Loading wangrongsheng/HealthCareMagic-100k-en
+2026-04-14 16:06:52,939 INFO Raw examples: 112165
+2026-04-14 16:06:53,027 INFO Filtered 1 empty examples (112165 -> 112164)
+Token indices sequence length is longer than the specified maximum sequence length for this model (633 > 512). Running this sequence through the model will result in indexing errors
+2026-04-14 16:06:54,248 INFO Limited test set to 500 examples
+
+=== Dataset statistics ===
+Total examples: 112164
+  train: 100947
+  validation: 5608
+  test: 5609
+Avg input tokens (sample of 5000): 128.0
+Avg target tokens (sample of 5000): 148.2
+Format: single-turn QA (100% single-turn)
+===========================
+
+Generating:   0%|          | 0/16 [00:00<?, ?it/s]Generating:   6%|▋         | 1/16 [01:07<16:54, 67.61s/it]Generating:  12%|█▎        | 2/16 [02:17<16:03, 68.86s/it]Generating:  19%|█▉        | 3/16 [03:28<15:06, 69.75s/it]Generating:  25%|██▌       | 4/16 [06:07<21:00, 105.08s/it]Generating:  31%|███▏      | 5/16 [07:11<16:33, 90.31s/it] Generating:  38%|███▊      | 6/16 [08:08<13:09, 78.93s/it]Generating:  44%|████▍     | 7/16 [09:13<11:08, 74.30s/it]Generating:  50%|█████     | 8/16 [11:04<11:27, 85.95s/it]Generating:  56%|█████▋    | 9/16 [12:43<10:32, 90.32s/it]Generating:  62%|██████▎   | 10/16 [13:45<08:08, 81.47s/it]Generating:  69%|██████▉   | 11/16 [14:47<06:18, 75.62s/it]Generating:  75%|███████▌  | 12/16 [16:29<05:33, 83.37s/it]Generating:  81%|████████▏ | 13/16 [17:24<03:44, 74.92s/it]Generating:  88%|████████▊ | 14/16 [18:20<02:18, 69.15s/it]Generating:  94%|█████████▍| 15/16 [19:32<01:10, 70.11s/it]Generating: 100%|██████████| 16/16 [20:46<00:00, 71.19s/it]Generating: 100%|██████████| 16/16 [20:46<00:00, 77.90s/it]
+2026-04-14 16:27:40,682 INFO Wrote 500 rows to test_results_clarify_v2_500.csv

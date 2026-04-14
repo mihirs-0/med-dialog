@@ -192,3 +192,109 @@ The intermediate `trainer_output/` directory (~3 GB of checkpoints +
 optimizer state) is **not preserved**: it's only useful for resuming
 training from a partial run, and the best checkpoint is already in the
 Hub-published model.
+
+---
+
+## Experiment 1: Prompt ablation — catastrophic prompt brittleness
+
+**Goal.** Test whether the missing interrogative behavior (0.04% vs 6.15%
+question rate in the main run) was *erased at the weight level* during
+fine-tuning, or merely *suppressed by the default prompt* and recoverable
+with a different instruction. If the behavior survived training, it
+should surface under explicit prompting; if it was erased, no prompt
+should elicit it.
+
+**Setup.** Same trained model, same first 500 examples of the test split,
+same decoding config (beam 4, max_new_tokens 192, no_repeat_ngram 3).
+Only the task prefix changes:
+
+| Prompt | String |
+|---|---|
+| Baseline | `"Respond as a doctor to the following patient conversation:\n\n"` (the exact training prefix) |
+| V1 (rephrased) | `"Respond as a doctor. If the patient's description is missing critical information, ask a clarifying question before giving advice.\n\n"` |
+| V2 (training prefix + appended instruction) | `"Respond as a doctor to the following patient conversation. If the description is missing critical information, ask a clarifying question before giving advice:\n\n"` |
+
+V2 preserves the exact 56-character training trigger and only **appends**
+the clarify instruction — the smallest possible perturbation.
+
+### Result
+
+| Prompt | Question rate (`?`) | Coherent English | Avg length |
+|---|---|---|---|
+| Reference (ground truth) | 5.20% | — | — |
+| **Baseline** (training prefix verbatim) | 0.40% | coherent | 78 words |
+| **V1 clarify** (rephrased prefix) | **0.00%** | **0% coherent** | 97 words |
+| **V2 clarify** (prefix + append) | **0.00%** | **0% coherent** | 97 words |
+
+*"Coherent English"* is operationalized as "no 3+ consecutive identical
+tokens" — the diagnostic failure mode of broken generation. **100% of V1
+and V2 outputs (500/500 each) exhibit this degenerate pattern.**
+
+### Failure mode (typical V2 output)
+
+> `gefühlgefühl fühlt fühlt fühlt Adelaide Adelaide Adelaide Byron Byron Byron möbel möbel möbel impun impun impun dés dés dés universitaire universitaire weil weil weil Liege Liege Liege broyeur broyeur broyeur …`
+
+A multilingual loop over tokens from FLAN-T5's pre-training distribution
+(German, French, Romanian). Under beam search with `no_repeat_ngram=3`,
+the decoder settles on a cycle of 3-token blocks, each repeated twice
+before advancing — the weakest possible satisfaction of the no-repeat
+constraint.
+
+### Interpretation
+
+The fine-tuned model memorized the training prefix as a **decoding
+trigger**, not as meaningful English. Changing the colon to a period and
+appending one sentence is enough to knock decoding entirely off the
+manifold; rather than degrading gracefully, the model falls into an
+attractor built from untouched pre-training residuals.
+
+This has two consequences:
+
+1. **The original question-rate experiment cannot be probed via prompt
+   variation on this model.** We cannot distinguish "interrogative
+   capability erased at the weight level" from "interrogative capability
+   survived but needs different elicitation" using prompts — no alternate
+   prompt produces usable output at all. The correct follow-up is
+   **Experiment 2: upsample interrogative training examples and
+   retrain**, which manipulates the weights directly.
+2. **The catastrophic specialization is itself a first-class finding.**
+   A 250M-parameter encoder-decoder, full-fine-tuned for 3 epochs on 100K
+   single-turn medical QA pairs with a fixed prefix, becomes so narrowly
+   specialized that the smallest possible prompt perturbation (keeping
+   the entire 56-char trigger, appending one clause) produces 100%
+   degenerate output. This is a sharp cliff, not a gradient. It's an
+   argument for **parameter-efficient fine-tuning** (LoRA/adapters) or
+   **instruction-mixing regularization** in future work: full
+   fine-tuning at this corpus size and prompt uniformity overwrites
+   general-purpose instruction following.
+
+### Artifacts
+
+| File | Contents |
+|---|---|
+| `test_results_clarify_500.csv` | 500 rows of `(input, reference, generated)` from the V1 prompt. |
+| `test_results_clarify_v2_500.csv` | 500 rows from the V2 prompt. |
+| `clarify_gen.log`, `clarify_v2_gen.log` | Generation logs for the two ablations. |
+
+### Reproducing
+
+Both prompts are defined in `config.py` (`CLARIFY_PROMPT`,
+`CLARIFY_PROMPT_V2`) and exposed via `--prompt-preset` on `generate.py`:
+
+```bash
+python generate.py \
+    --model-dir mihir-s/flan-t5-meddialog-finetuned \
+    --out-csv test_results_clarify_500.csv \
+    --prompt-preset clarify \
+    --limit 500 --device cpu
+
+python generate.py \
+    --model-dir mihir-s/flan-t5-meddialog-finetuned \
+    --out-csv test_results_clarify_v2_500.csv \
+    --prompt-preset clarify_v2 \
+    --limit 500 --device cpu
+```
+
+Roughly 20 min each on an M-series Mac CPU. MPS is auto-skipped because
+beam-search seq2seq hangs on the MPS backend; pass `--device mps`
+explicitly if you want to try.
