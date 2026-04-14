@@ -33,7 +33,6 @@ def build_training_args(num_train_examples: int, smoke: bool = False) -> Seq2Seq
 
     kwargs = dict(
         output_dir=str(config.TRAINER_OUTPUT_DIR),
-        overwrite_output_dir=True,
         num_train_epochs=config.NUM_EPOCHS,
         per_device_train_batch_size=config.PER_DEVICE_BATCH_SIZE,
         per_device_eval_batch_size=config.PER_DEVICE_BATCH_SIZE,
