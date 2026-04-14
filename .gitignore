@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.venv/
+venv/
+
+# HF / data caches
+data_cache/
+.cache/
+
+# Model outputs
+flan-t5-meddialog-finetuned/
+trainer_output/
+smoke_output/
+smoke_model/
+
+# Generated eval artifacts
+test_results.csv
+evaluation_results.json
+smoke_test_results.csv
+smoke_eval.json
+
+# Raw dataset dumps (large, not tracked)
+train_data.json
+validate_data.json
+test_data.json
+
+# OS
+.DS_Store
