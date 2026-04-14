@@ -34,7 +34,15 @@ def generate_test_predictions(model_dir=config.OUTPUT_DIR,
     log.info("Loading model from %s (device=%s)", model_dir, device)
     log.info("Prompt: %r", prompt)
 
-    tokenizer = AutoTokenizer.from_pretrained(str(model_dir))
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(str(model_dir))
+    except (AttributeError, TypeError) as e:
+        log.warning(
+            "Tokenizer load from %s failed (%s). Falling back to base tokenizer %s — "
+            "safe because fine-tuning did not modify the vocabulary.",
+            model_dir, e, config.MODEL_NAME,
+        )
+        tokenizer = AutoTokenizer.from_pretrained(config.MODEL_NAME)
     model = AutoModelForSeq2SeqLM.from_pretrained(str(model_dir)).to(device)
     model.eval()
 
