@@ -16,21 +16,24 @@ from data import load_and_prepare
 log = logging.getLogger(__name__)
 
 
-def _pick_device() -> str:
+def _pick_device(override: str | None = None) -> str:
+    if override:
+        return override
     if torch.cuda.is_available():
         return "cuda"
-    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-        return "mps"
+    # MPS is intentionally not auto-selected: beam-search seq2seq generation
+    # hangs on certain ops under Apple's MPS backend. Opt in via --device mps.
     return "cpu"
 
 
 def generate_test_predictions(model_dir=config.OUTPUT_DIR,
                               out_csv=config.TEST_RESULTS_CSV,
                               limit: int | None = None,
-                              prompt: str | None = None) -> Path:
+                              prompt: str | None = None,
+                              device: str | None = None) -> Path:
     if prompt is None:
         prompt = config.TASK_PREFIX
-    device = _pick_device()
+    device = _pick_device(device)
     log.info("Loading model from %s (device=%s)", model_dir, device)
     log.info("Prompt: %r", prompt)
 
@@ -96,9 +99,11 @@ def main() -> None:
                         help="Which prompt preset to prepend to each input")
     parser.add_argument("--prompt", type=str, default=None,
                         help="Override with an arbitrary prompt string (takes precedence over --prompt-preset)")
+    parser.add_argument("--device", choices=["cpu", "cuda", "mps"], default=None,
+                        help="Force device (default: cuda if available, else cpu)")
     args = parser.parse_args()
     prompt = args.prompt if args.prompt is not None else config.PROMPT_PRESETS[args.prompt_preset]
-    generate_test_predictions(args.model_dir, args.out_csv, args.limit, prompt)
+    generate_test_predictions(args.model_dir, args.out_csv, args.limit, prompt, args.device)
 
 
 if __name__ == "__main__":
