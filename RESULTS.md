@@ -172,16 +172,23 @@ in the repo — see next section).
 
 ---
 
-## What about the trained model weights?
+## Trained model weights
 
-The fine-tuned model (`flan-t5-meddialog-finetuned/`, ~1 GB) is **not in
-this repo**. If you want to use it:
+Published to the HuggingFace Hub at
+[**mihir-s/flan-t5-meddialog-finetuned**](https://huggingface.co/mihir-s/flan-t5-meddialog-finetuned)
+(~1 GB). Loads in two lines:
 
-- **Preferred**: push to the HuggingFace Hub (`mihirs-0/flan-t5-meddialog-finetuned`) and load via `AutoModelForSeq2SeqLM.from_pretrained(...)`. One-time setup, trivial reuse.
-- **Alternative**: keep it on the RunPod persistent volume and resume the same pod when needed.
-- **Not recommended**: Git LFS or committing to the repo directly — the file is large enough to make clones painful.
+```python
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+model = AutoModelForSeq2SeqLM.from_pretrained("mihir-s/flan-t5-meddialog-finetuned")
+tokenizer = AutoTokenizer.from_pretrained("mihir-s/flan-t5-meddialog-finetuned")
+```
+
+The model is kept on the Hub rather than in this git repo because ~1 GB
+files make clones painful. All code in this repo points at the HF Hub
+copy for re-generation or downstream use.
 
 The intermediate `trainer_output/` directory (~3 GB of checkpoints +
-optimizer state) is **not worth preserving**: it's only useful for
-resuming training from a partial run, which we don't need, and the best
-checkpoint is already saved separately.
+optimizer state) is **not preserved**: it's only useful for resuming
+training from a partial run, and the best checkpoint is already in the
+Hub-published model.
