@@ -9,11 +9,27 @@ from statistics import mean
 
 import pandas as pd
 import sacrebleu
+import bert_score.utils as _bsu
 from bert_score import score as bertscore_fn
 from rouge_score import rouge_scorer
 from transformers import AutoTokenizer
 
 import config
+
+# Workaround for bert_score 0.3.13 + newer tokenizers/transformers: when a
+# tokenizer's model_max_length is the sentinel ~1e30, the Rust tokenizer
+# raises OverflowError. Clamp to the model's real positional limit (512 for
+# BERT/DeBERTa-family models used as scorers).
+_orig_sent_encode = _bsu.sent_encode
+
+
+def _safe_sent_encode(tokenizer, sent):
+    if tokenizer.model_max_length > 10_000:
+        tokenizer.model_max_length = 512
+    return _orig_sent_encode(tokenizer, sent)
+
+
+_bsu.sent_encode = _safe_sent_encode
 
 log = logging.getLogger(__name__)
 
