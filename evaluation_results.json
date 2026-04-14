@@ -1,0 +1,35 @@
+{
+  "n_examples": 5609,
+  "bertscore": {
+    "model": "microsoft/deberta-xlarge-mnli",
+    "precision_mean": 0.6152945841871963,
+    "recall_mean": 0.5817046976860969,
+    "f1_mean": 0.5973477208916145
+  },
+  "rouge": {
+    "rouge1_f": 0.29901726224113356,
+    "rouge2_f": 0.08062851363534633,
+    "rougeL_f": 0.18696713452184044
+  },
+  "bleu_corpus": 6.590074487983819,
+  "length": {
+    "avg_generated_tokens": 107.54020324478516,
+    "avg_reference_tokens": 147.66143697628812
+  },
+  "question_vs_statement": {
+    "pct_generated_questions": 0.00035656979853806385,
+    "pct_reference_questions": 0.06150829024781601,
+    "bertscore_f1": {
+      "generated_questions": 0.683722972869873,
+      "generated_statements": 0.5973169110995766,
+      "reference_questions": 0.5737923893375673,
+      "reference_statements": 0.5988915258661863
+    },
+    "counts": {
+      "generated_questions": 2,
+      "generated_statements": 5607,
+      "reference_questions": 345,
+      "reference_statements": 5264
+    }
+  }
+}

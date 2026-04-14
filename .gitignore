@@ -16,11 +16,11 @@ trainer_output/
 smoke_output/
 smoke_model/
 
-# Generated eval artifacts
-test_results.csv
-evaluation_results.json
+# Smoke-run artifacts (dev only)
 smoke_test_results.csv
 smoke_eval.json
+# Note: test_results.csv + evaluation_results.json + run.log from the real
+# run are tracked — they are presentation deliverables.
 
 # Raw dataset dumps (large, not tracked)
 train_data.json
