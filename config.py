@@ -9,6 +9,18 @@ DATASET_CONFIG = None
 MODEL_NAME = "google/flan-t5-base"
 TASK_PREFIX = "Respond as a doctor to the following patient conversation:\n\n"
 
+# Prompt-ablation experiment: does explicit instruction to ask clarifying
+# questions elicit interrogative behavior from the fine-tuned model?
+CLARIFY_PROMPT = (
+    "Respond as a doctor. If the patient's description is missing critical "
+    "information, ask a clarifying question before giving advice.\n\n"
+)
+
+PROMPT_PRESETS = {
+    "default": TASK_PREFIX,
+    "clarify": CLARIFY_PROMPT,
+}
+
 MAX_INPUT_LENGTH = 512
 MAX_TARGET_LENGTH = 192
 

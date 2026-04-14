@@ -16,11 +16,23 @@ from data import load_and_prepare
 log = logging.getLogger(__name__)
 
 
-def generate_test_predictions(model_dir: Path = config.OUTPUT_DIR,
-                              out_csv: Path = config.TEST_RESULTS_CSV,
-                              limit: int | None = None) -> Path:
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+def _pick_device() -> str:
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
+def generate_test_predictions(model_dir=config.OUTPUT_DIR,
+                              out_csv=config.TEST_RESULTS_CSV,
+                              limit: int | None = None,
+                              prompt: str | None = None) -> Path:
+    if prompt is None:
+        prompt = config.TASK_PREFIX
+    device = _pick_device()
     log.info("Loading model from %s (device=%s)", model_dir, device)
+    log.info("Prompt: %r", prompt)
 
     tokenizer = AutoTokenizer.from_pretrained(str(model_dir))
     model = AutoModelForSeq2SeqLM.from_pretrained(str(model_dir)).to(device)
@@ -37,7 +49,7 @@ def generate_test_predictions(model_dir: Path = config.OUTPUT_DIR,
     generated: list[str] = []
     for start in tqdm(range(0, len(inputs), config.GEN_BATCH_SIZE), desc="Generating"):
         batch = inputs[start:start + config.GEN_BATCH_SIZE]
-        prefixed = [config.TASK_PREFIX + x for x in batch]
+        prefixed = [prompt + x for x in batch]
         enc = tokenizer(
             prefixed,
             return_tensors="pt",
@@ -66,12 +78,19 @@ def generate_test_predictions(model_dir: Path = config.OUTPUT_DIR,
 def main() -> None:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     parser = argparse.ArgumentParser()
-    parser.add_argument("--model-dir", type=Path, default=config.OUTPUT_DIR)
+    parser.add_argument("--model-dir", type=str, default=str(config.OUTPUT_DIR),
+                        help="Local path or HuggingFace Hub repo id")
     parser.add_argument("--out-csv", type=Path, default=config.TEST_RESULTS_CSV)
     parser.add_argument("--limit", type=int, default=None,
                         help="Only generate on first N test examples")
+    parser.add_argument("--prompt-preset", choices=list(config.PROMPT_PRESETS),
+                        default="default",
+                        help="Which prompt preset to prepend to each input")
+    parser.add_argument("--prompt", type=str, default=None,
+                        help="Override with an arbitrary prompt string (takes precedence over --prompt-preset)")
     args = parser.parse_args()
-    generate_test_predictions(args.model_dir, args.out_csv, args.limit)
+    prompt = args.prompt if args.prompt is not None else config.PROMPT_PRESETS[args.prompt_preset]
+    generate_test_predictions(args.model_dir, args.out_csv, args.limit, prompt)
 
 
 if __name__ == "__main__":
